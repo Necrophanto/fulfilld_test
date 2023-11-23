@@ -1,0 +1,7 @@
+To run the main program, in console run:
+$ python main.py
+
+To run tests, in console run:
+
+$ python -m unittest -v tests\tests.py (WINDOWS)
+$ python -m unittest -v tests/tests.py (LINUX & MAC)
