@@ -13,25 +13,19 @@ probability when k = 6; index 1 when k = 7; etc.
 """
 
 
-
 db = sqlite3.connect('test.db')
 
-with db as conn:
-    cursor = conn.cursor()
-    # Create the table for the results
-    cursor.execute("""CREATE TABLE IF NOT EXISTS results (
-                dice_sides integer,
-                rolls_qty integer,
-                bob_wins integer,
-                alice_wins integer,
-                bobs_prob real
-                )""")
-    conn.commit()
-
-
-
-
-
+# # --- Uncomment this section to create the DB and the results table ---
+# with db as conn:
+#     cursor = conn.cursor()
+#     cursor.execute("""CREATE TABLE IF NOT EXISTS results (
+#                 dice_sides integer,
+#                 rolls_qty integer,
+#                 bob_wins integer,
+#                 alice_wins integer,
+#                 bobs_prob real
+#                 )""")
+#     conn.commit()
 
 
 def bob_rolls(sides: int):
@@ -47,57 +41,37 @@ def simulate_rolls(dice_sides: int, total_rolls: int):
     for i in range(1,total_rolls+1):
         bob_w = bob_rolls(dice_sides)
         ali_w = ali_rolls(dice_sides)
-        # print(i)
         if bob_w == dice_sides:
             scores["Bob"] += 1
         if ali_w == dice_sides:
-            scores["Alice"] += 1
-    
+            scores["Alice"] += 1    
     return scores
 
-# def quicker_simulation(rolls: int, sides: int):
-#     b_wins = 0
-#     a_wins = 0
-#     for i in range(rolls):
-#         bob = bob_rolls(sides)
-#         if bob == sides:
-#             b_wins += 1
-#         ali = ali_rolls(sides)
-#         if ali == sides:
-#             a_wins += 1
-#         # print(">>>",bob)
-#     print(b_wins,"winned by Bob.", float(b_wins/events))
-#     print(a_wins,"winned by Alice.", float(a_wins/events))
-# quicker_simulation(events,dice_sides)
     
 
 start = time.time()
-# ----------------------------------------------------------------------------
-# ToDo:
-# | Run for 100, 1000, 10000, 100000, 1000000 
-# | Build binomial definition 
-# | Add bobs_prob field to table and recreate DB [DONE]
-# | Add context manager for db connection [DONE]
-events = 100000
-# dice_sides = 10
-# results = simulate_rolls(dice_sides,events)
-# print(">>>>>", results)
-# print(results['Bob']," winned by Bob.", f"Probability: {float(results['Bob']/events)}")
-# print(results['Alice']," winned by Alice.", f"Probability: {float(results['Alice']/events)}")
+# -------------------------------------- BINOMIAL EXPERIMENT SIMULTAION --------------------------------------
 
-# with conn as db_conn:
-#     for s in range(6,100):
-#         results = simulate_rolls(s,events)
-#         # print(f"For {s} sided dice, Bob winned {results['Bob']} times.", f"Bob's probability of winning: {float(results['Bob']/events)}")
-#         insertion = db_conn.execute(f"""INSERT INTO results(dice_sides, rolls_qty, bob_wins, alice_wins) 
-#                                     VALUES ({s}, {events}, {results['Bob']}, {results['Alice']});""")
+# # --- This block simulates the rolls of the dices and inserts the results into the DB ---
+# events = [100, 1000, 10000, 100000, 1000000]
+# # Takes up to 2 minutes to complete the simulation using a nested for cycle, 
+# # and takes up to half a minute to re-run it with a single value for the total number of rolls (events) and a single for loop
+# with db as db_conn:
+#     for e in events:  # This loop should be eliminated if we assign a single value for 'events' variable
+#         for s in range(6,100):
+#             results = simulate_rolls(s,e)
+#             # print(f"For {s} sided dice, Bob winned {results['Bob']} times.", f"Bob's probability of winning: {float(results['Bob']/events)}")
+#             b_prob = float(results['Bob']/e)
+#             insertion = db_conn.execute(f"""INSERT INTO results(dice_sides, rolls_qty, bob_wins, alice_wins, bobs_prob) 
+#                                         VALUES ({s}, {e}, {results['Bob']}, {results['Alice']}, {b_prob});""")
 
-# with conn as db_conn:
-#     test = db_conn.execute('DELETE FROM results;')
-#     resultados = db_conn.execute('SELECT * from results;').fetchall()
+# # --- Block to check DB contains and/or delete previous results (if needed) ---
+# with db as db_conn:
+# #     delete = db_conn.execute('DELETE FROM results;')
+#     resultados = db_conn.execute('SELECT * from results WHERE dice_sides=6 OR dice_sides=99 ORDER BY dice_sides ASC;').fetchall()
 #     print("<<<", resultados)
 
-# ----------------------------------------------------------------------------
+# -------------------------------------- -------------------------------------- --------------------------------------
 stop = time.time()
 print(f"Elapsed time: {stop - start}.")
 
